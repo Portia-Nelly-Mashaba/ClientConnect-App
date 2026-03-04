@@ -1,0 +1,11 @@
+{
+    "name": "portia/client-connect-plain-php",
+    "description": "Client Connect assessment project in plain PHP",
+    "type": "project",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}
