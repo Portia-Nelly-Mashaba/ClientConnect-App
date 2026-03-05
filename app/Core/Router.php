@@ -9,7 +9,12 @@ use RuntimeException;
 final class Router
 {
     /**
-     * @var array<string, array<string, callable|array{0: class-string, 1: string}>>
+     * @var array<string, list<array{
+     *   path: string,
+     *   regex: string,
+     *   params: list<string>,
+     *   handler: callable|array{0: class-string, 1: string}
+     * }>>
      */
     private array $routes = [
         'GET' => [],
@@ -36,19 +41,29 @@ final class Router
     {
         $method = strtoupper($method);
         $path = $this->normalizePath(parse_url($uri, PHP_URL_PATH) ?: '/');
-        $handler = $this->routes[$method][$path] ?? null;
+        $routes = $this->routes[$method] ?? [];
 
-        if ($handler === null) {
-            http_response_code(404);
-            header('Content-Type: text/plain; charset=UTF-8');
-            echo '404 Not Found';
+        foreach ($routes as $route) {
+            if (!preg_match($route['regex'], $path, $matches)) {
+                continue;
+            }
+
+            /** @var array<int, string> $parameters */
+            $parameters = [];
+            foreach ($route['params'] as $name) {
+                $parameters[] = (string) ($matches[$name] ?? '');
+            }
+
+            $result = $this->resolve($route['handler'], $parameters);
+            if (is_string($result)) {
+                echo $result;
+            }
             return;
         }
 
-        $result = $this->resolve($handler);
-        if (is_string($result)) {
-            echo $result;
-        }
+        http_response_code(404);
+        header('Content-Type: text/plain; charset=UTF-8');
+        echo '404 Not Found';
     }
 
     /**
@@ -57,16 +72,24 @@ final class Router
     private function add(string $method, string $path, callable|array $handler): void
     {
         $normalizedPath = $this->normalizePath($path);
-        $this->routes[$method][$normalizedPath] = $handler;
+        [$regex, $params] = $this->compilePattern($normalizedPath);
+
+        $this->routes[$method][] = [
+            'path' => $normalizedPath,
+            'regex' => $regex,
+            'params' => $params,
+            'handler' => $handler,
+        ];
     }
 
     /**
      * @param callable|array{0: class-string, 1: string} $handler
+     * @param array<int, string> $parameters
      */
-    private function resolve(callable|array $handler): mixed
+    private function resolve(callable|array $handler, array $parameters = []): mixed
     {
         if (is_callable($handler)) {
-            return $handler();
+            return $handler(...$parameters);
         }
 
         [$controllerClass, $method] = $handler;
@@ -76,7 +99,7 @@ final class Router
             throw new RuntimeException("Route handler method not found: {$controllerClass}::{$method}");
         }
 
-        return $controller->{$method}();
+        return $controller->{$method}(...$parameters);
     }
 
     private function normalizePath(string $path): string
@@ -87,5 +110,32 @@ final class Router
 
         $normalized = '/' . trim($path, '/');
         return $normalized === '//' ? '/' : $normalized;
+    }
+
+    /**
+     * @return array{0: string, 1: list<string>}
+     */
+    private function compilePattern(string $path): array
+    {
+        if ($path === '/') {
+            return ['#^/$#', []];
+        }
+
+        $segments = explode('/', trim($path, '/'));
+        $regexParts = [];
+        $params = [];
+
+        foreach ($segments as $segment) {
+            if (preg_match('/^\{([a-zA-Z_][a-zA-Z0-9_]*)\}$/', $segment, $matches) === 1) {
+                $name = $matches[1];
+                $params[] = $name;
+                $regexParts[] = '(?<' . $name . '>\d+)';
+                continue;
+            }
+
+            $regexParts[] = preg_quote($segment, '#');
+        }
+
+        return ['#^/' . implode('/', $regexParts) . '$#', $params];
     }
 }

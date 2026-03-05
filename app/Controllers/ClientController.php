@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\Database;
+use App\Core\Flash;
 use App\Core\View;
 use App\Requests\StoreClientRequest;
 use App\Repositories\ClientContactRepository;
 use App\Repositories\ClientRepository;
-use App\Repositories\ContactRepository;
 use App\Services\ClientCodeGeneratorService;
 use Throwable;
 
@@ -17,8 +17,7 @@ final class ClientController
 {
     public function index(): string
     {
-        $created = isset($_GET['created']) && $_GET['created'] === '1';
-        return $this->renderIndex([], [], $created);
+        return $this->renderIndex([], []);
     }
 
     public function store(): string
@@ -27,7 +26,7 @@ final class ClientController
 
         if ($errors !== []) {
             http_response_code(422);
-            return $this->renderIndex($errors, $data, false);
+            return $this->renderIndex($errors, $data);
         }
 
         $repository = new ClientRepository();
@@ -53,36 +52,54 @@ final class ClientController
             http_response_code(500);
             return $this->renderIndex(
                 ['general' => 'Unable to create client right now. Please try again.'],
-                $data,
-                false
+                $data
             );
         }
 
-        header('Location: /clients?created=1');
+        Flash::setStatus('Client created successfully.');
+        header('Location: /clients/' . $clientId);
         http_response_code(302);
         return '';
+    }
+
+    public function show(string $clientId): string
+    {
+        $id = (int) $clientId;
+        $client = (new ClientRepository())->findById($id);
+        if ($client === null) {
+            http_response_code(404);
+            return 'Client not found';
+        }
+
+        $tab = (string) ($_GET['tab'] ?? '');
+        $openContactsTab = $tab === 'contacts';
+
+        return View::render('clients/show', [
+            'title' => 'Client Details',
+            'client' => $client,
+            'linkedContacts' => (new ClientContactRepository())->contactsForClient($id),
+            'availableContacts' => (new ClientContactRepository())->availableContactsForClient($id),
+            'statusMessage' => Flash::pullStatus(),
+            'errorMessage' => Flash::pullError(),
+            'openContactsTab' => $openContactsTab,
+        ]);
     }
 
     /**
      * @param array<string, string> $errors
      * @param array<string, string> $oldInput
      */
-    private function renderIndex(array $errors, array $oldInput, bool $created): string
+    private function renderIndex(array $errors, array $oldInput): string
     {
         $clients = (new ClientRepository())->allSortedByName();
-        $contacts = (new ContactRepository())->allSortedBySurnameAndName();
-        $links = (new ClientContactRepository())->allLinks();
-        $linkStatus = (string) ($_GET['link_status'] ?? '');
 
         return View::render('clients/index', [
             'title' => 'Clients',
             'clients' => $clients,
-            'contacts' => $contacts,
-            'links' => $links,
             'errors' => $errors,
             'old' => $oldInput,
-            'created' => $created,
-            'linkStatus' => $linkStatus,
+            'statusMessage' => Flash::pullStatus(),
+            'errorMessage' => Flash::pullError(),
         ]);
     }
 

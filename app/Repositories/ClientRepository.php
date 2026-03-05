@@ -69,4 +69,23 @@ final class ClientRepository
 
         return (bool) $statement->fetchColumn();
     }
+
+    /**
+     * @return array{id: int, name: string, client_code: string}|null
+     */
+    public function findById(int $id): ?array
+    {
+        $statement = Database::connection()->prepare(
+            'SELECT id, name, client_code FROM clients WHERE id = :id LIMIT 1'
+        );
+        $statement->execute([':id' => $id]);
+        $row = $statement->fetch();
+
+        if (!is_array($row)) {
+            return null;
+        }
+
+        /** @var array{id: int, name: string, client_code: string} $row */
+        return $row;
+    }
 }

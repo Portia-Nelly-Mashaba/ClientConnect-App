@@ -67,4 +67,88 @@ final class ClientContactRepository
         $rows = $statement->fetchAll();
         return $rows;
     }
+
+    /**
+     * @return array<int, array{id: int, name: string, surname: string, email: string}>
+     */
+    public function contactsForClient(int $clientId): array
+    {
+        $statement = Database::connection()->prepare(
+            'SELECT ct.id, ct.name, ct.surname, ct.email
+             FROM contacts ct
+             INNER JOIN client_contact cc ON cc.contact_id = ct.id
+             WHERE cc.client_id = :client_id
+             ORDER BY ct.surname ASC, ct.name ASC'
+        );
+        $statement->execute([':client_id' => $clientId]);
+
+        /** @var array<int, array{id: int, name: string, surname: string, email: string}> $rows */
+        $rows = $statement->fetchAll();
+        return $rows;
+    }
+
+    /**
+     * @return array<int, array{id: int, name: string, surname: string}>
+     */
+    public function availableContactsForClient(int $clientId): array
+    {
+        $statement = Database::connection()->prepare(
+            'SELECT ct.id, ct.name, ct.surname
+             FROM contacts ct
+             WHERE NOT EXISTS (
+                 SELECT 1
+                 FROM client_contact cc
+                 WHERE cc.contact_id = ct.id
+                   AND cc.client_id = :client_id
+             )
+             ORDER BY ct.surname ASC, ct.name ASC'
+        );
+        $statement->execute([':client_id' => $clientId]);
+
+        /** @var array<int, array{id: int, name: string, surname: string}> $rows */
+        $rows = $statement->fetchAll();
+        return $rows;
+    }
+
+    /**
+     * @return array<int, array{id: int, name: string, client_code: string}>
+     */
+    public function clientsForContact(int $contactId): array
+    {
+        $statement = Database::connection()->prepare(
+            'SELECT c.id, c.name, c.client_code
+             FROM clients c
+             INNER JOIN client_contact cc ON cc.client_id = c.id
+             WHERE cc.contact_id = :contact_id
+             ORDER BY c.name ASC'
+        );
+        $statement->execute([':contact_id' => $contactId]);
+
+        /** @var array<int, array{id: int, name: string, client_code: string}> $rows */
+        $rows = $statement->fetchAll();
+        return $rows;
+    }
+
+    /**
+     * @return array<int, array{id: int, name: string, client_code: string}>
+     */
+    public function availableClientsForContact(int $contactId): array
+    {
+        $statement = Database::connection()->prepare(
+            'SELECT c.id, c.name, c.client_code
+             FROM clients c
+             WHERE NOT EXISTS (
+                 SELECT 1
+                 FROM client_contact cc
+                 WHERE cc.client_id = c.id
+                   AND cc.contact_id = :contact_id
+             )
+             ORDER BY c.name ASC'
+        );
+        $statement->execute([':contact_id' => $contactId]);
+
+        /** @var array<int, array{id: int, name: string, client_code: string}> $rows */
+        $rows = $statement->fetchAll();
+        return $rows;
+    }
 }

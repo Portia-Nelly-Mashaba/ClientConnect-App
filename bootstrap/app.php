@@ -8,6 +8,17 @@ if (!defined('BASE_PATH')) {
     define('BASE_PATH', dirname(__DIR__));
 }
 
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    $sessionPath = BASE_PATH . '/storage/sessions';
+    if (!is_dir($sessionPath)) {
+        mkdir($sessionPath, 0777, true);
+    }
+    if (is_dir($sessionPath) && is_writable($sessionPath)) {
+        session_save_path($sessionPath);
+    }
+    session_start();
+}
+
 $composerAutoload = BASE_PATH . '/vendor/autoload.php';
 if (is_file($composerAutoload)) {
     require_once $composerAutoload;

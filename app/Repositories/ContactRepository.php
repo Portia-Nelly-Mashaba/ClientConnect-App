@@ -59,4 +59,23 @@ final class ContactRepository
 
         return (bool) $statement->fetchColumn();
     }
+
+    /**
+     * @return array{id: int, name: string, surname: string, email: string}|null
+     */
+    public function findById(int $id): ?array
+    {
+        $statement = Database::connection()->prepare(
+            'SELECT id, name, surname, email FROM contacts WHERE id = :id LIMIT 1'
+        );
+        $statement->execute([':id' => $id]);
+        $row = $statement->fetch();
+
+        if (!is_array($row)) {
+            return null;
+        }
+
+        /** @var array{id: int, name: string, surname: string, email: string} $row */
+        return $row;
+    }
 }
