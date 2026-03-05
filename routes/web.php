@@ -11,6 +11,7 @@ use App\Core\Router;
 return static function (Router $router): void {
     $router->get('/', [HomeController::class, 'index']);
     $router->get('/clients', [ClientController::class, 'index']);
+    $router->post('/clients', [ClientController::class, 'store']);
     $router->get('/contacts', [ContactController::class, 'index']);
     $router->get('/health/db', [HealthController::class, 'db']);
 };
