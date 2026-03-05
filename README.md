@@ -4,10 +4,10 @@ This is a framework-free PHP project scaffold for the Client Connect assessment.
 
 ## Tech
 - PHP (no framework)
-- MySQL (planned)
-- JavaScript (planned)
+- MySQL
+- JavaScript
 
-## Initial structure
+## Structure
 - `app/` - MVC and core application classes
 - `bootstrap/` - startup/bootstrap files
 - `config/` - configuration files
@@ -17,3 +17,11 @@ This is a framework-free PHP project scaffold for the Client Connect assessment.
 - `routes/` - route definitions
 - `storage/` - logs, cache, uploads
 - `tests/` - test scripts
+
+## Run locally
+1. Start the PHP server from project root:
+   - `php -S localhost:8000 -t public`
+2. Open:
+   - `http://localhost:8000`
+
+
