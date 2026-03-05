@@ -9,15 +9,19 @@ use App\Core\Database;
 final class ClientRepository
 {
     /**
-     * @return array<int, array{id: int, name: string, client_code: string}>
+     * @return array<int, array{id: int, name: string, client_code: string, contacts_count: int}>
      */
     public function allSortedByName(): array
     {
         $statement = Database::connection()->query(
-            'SELECT id, name, client_code FROM clients ORDER BY name ASC'
+            'SELECT c.id, c.name, c.client_code, COUNT(cc.id) AS contacts_count
+             FROM clients c
+             LEFT JOIN client_contact cc ON cc.client_id = c.id
+             GROUP BY c.id, c.name, c.client_code
+             ORDER BY c.name ASC'
         );
 
-        /** @var array<int, array{id: int, name: string, client_code: string}> $rows */
+        /** @var array<int, array{id: int, name: string, client_code: string, contacts_count: int}> $rows */
         $rows = $statement->fetchAll();
         return $rows;
     }
@@ -52,6 +56,16 @@ final class ClientRepository
             'SELECT 1 FROM clients WHERE client_code = :client_code LIMIT 1'
         );
         $statement->execute([':client_code' => $clientCode]);
+
+        return (bool) $statement->fetchColumn();
+    }
+
+    public function exists(int $id): bool
+    {
+        $statement = Database::connection()->prepare(
+            'SELECT 1 FROM clients WHERE id = :id LIMIT 1'
+        );
+        $statement->execute([':id' => $id]);
 
         return (bool) $statement->fetchColumn();
     }

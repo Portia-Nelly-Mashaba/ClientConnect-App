@@ -7,7 +7,9 @@ namespace App\Controllers;
 use App\Core\Database;
 use App\Core\View;
 use App\Requests\StoreClientRequest;
+use App\Repositories\ClientContactRepository;
 use App\Repositories\ClientRepository;
+use App\Repositories\ContactRepository;
 use App\Services\ClientCodeGeneratorService;
 use Throwable;
 
@@ -68,13 +70,19 @@ final class ClientController
     private function renderIndex(array $errors, array $oldInput, bool $created): string
     {
         $clients = (new ClientRepository())->allSortedByName();
+        $contacts = (new ContactRepository())->allSortedBySurnameAndName();
+        $links = (new ClientContactRepository())->allLinks();
+        $linkStatus = (string) ($_GET['link_status'] ?? '');
 
         return View::render('clients/index', [
             'title' => 'Clients',
             'clients' => $clients,
+            'contacts' => $contacts,
+            'links' => $links,
             'errors' => $errors,
             'old' => $oldInput,
             'created' => $created,
+            'linkStatus' => $linkStatus,
         ]);
     }
 
