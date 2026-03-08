@@ -12,6 +12,8 @@ use App\Repositories\ContactRepository;
 
 final class ContactController
 {
+    private const PER_PAGE = 5;
+
     public function index(): string
     {
         return $this->renderIndex([], []);
@@ -67,11 +69,27 @@ final class ContactController
      */
     private function renderIndex(array $errors, array $oldInput): string
     {
-        $contacts = (new ContactRepository())->allSortedBySurnameAndName();
+        $page = max(1, (int) ($_GET['page'] ?? 1));
+        $repository = new ContactRepository();
+        $total = $repository->countAll();
+        $totalPages = max(1, (int) ceil($total / self::PER_PAGE));
+
+        if ($page > $totalPages) {
+            $page = $totalPages;
+        }
+
+        $offset = ($page - 1) * self::PER_PAGE;
+        $contacts = $repository->paginatedSortedBySurnameAndName(self::PER_PAGE, $offset);
 
         return View::render('contacts/index', [
             'title' => 'Contacts',
             'contacts' => $contacts,
+            'pagination' => [
+                'page' => $page,
+                'perPage' => self::PER_PAGE,
+                'total' => $total,
+                'totalPages' => $totalPages,
+            ],
             'errors' => $errors,
             'old' => $oldInput,
             'statusMessage' => Flash::pullStatus(),

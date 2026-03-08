@@ -15,6 +15,8 @@ use Throwable;
 
 final class ClientController
 {
+    private const PER_PAGE = 5;
+
     public function index(): string
     {
         return $this->renderIndex([], []);
@@ -91,11 +93,27 @@ final class ClientController
      */
     private function renderIndex(array $errors, array $oldInput): string
     {
-        $clients = (new ClientRepository())->allSortedByName();
+        $page = max(1, (int) ($_GET['page'] ?? 1));
+        $repository = new ClientRepository();
+        $total = $repository->countAll();
+        $totalPages = max(1, (int) ceil($total / self::PER_PAGE));
+
+        if ($page > $totalPages) {
+            $page = $totalPages;
+        }
+
+        $offset = ($page - 1) * self::PER_PAGE;
+        $clients = $repository->paginatedSortedByName(self::PER_PAGE, $offset);
 
         return View::render('clients/index', [
             'title' => 'Clients',
             'clients' => $clients,
+            'pagination' => [
+                'page' => $page,
+                'perPage' => self::PER_PAGE,
+                'total' => $total,
+                'totalPages' => $totalPages,
+            ],
             'errors' => $errors,
             'old' => $oldInput,
             'statusMessage' => Flash::pullStatus(),

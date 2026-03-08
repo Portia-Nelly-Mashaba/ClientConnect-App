@@ -5,9 +5,16 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Core\Database;
+use PDO;
 
 final class ClientRepository
 {
+    public function countAll(): int
+    {
+        $statement = Database::connection()->query('SELECT COUNT(*) FROM clients');
+        return (int) $statement->fetchColumn();
+    }
+
     /**
      * @return array<int, array{id: int, name: string, client_code: string, contacts_count: int}>
      */
@@ -20,6 +27,28 @@ final class ClientRepository
              GROUP BY c.id, c.name, c.client_code
              ORDER BY c.name ASC'
         );
+
+        /** @var array<int, array{id: int, name: string, client_code: string, contacts_count: int}> $rows */
+        $rows = $statement->fetchAll();
+        return $rows;
+    }
+
+    /**
+     * @return array<int, array{id: int, name: string, client_code: string, contacts_count: int}>
+     */
+    public function paginatedSortedByName(int $limit, int $offset): array
+    {
+        $statement = Database::connection()->prepare(
+            'SELECT c.id, c.name, c.client_code, COUNT(cc.id) AS contacts_count
+             FROM clients c
+             LEFT JOIN client_contact cc ON cc.client_id = c.id
+             GROUP BY c.id, c.name, c.client_code
+             ORDER BY c.name ASC
+             LIMIT :limit OFFSET :offset'
+        );
+        $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $statement->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $statement->execute();
 
         /** @var array<int, array{id: int, name: string, client_code: string, contacts_count: int}> $rows */
         $rows = $statement->fetchAll();

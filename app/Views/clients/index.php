@@ -5,9 +5,13 @@ $clients = (isset($clients) && is_array($clients)) ? $clients : [];
 $errors = (isset($errors) && is_array($errors)) ? $errors : [];
 /** @var array<string, string> $old */
 $old = (isset($old) && is_array($old)) ? $old : [];
+/** @var array{page?: int, totalPages?: int, total?: int, perPage?: int} $pagination */
+$pagination = (isset($pagination) && is_array($pagination)) ? $pagination : [];
 $statusMessage = is_string($statusMessage ?? null) ? $statusMessage : null;
 $errorMessage = is_string($errorMessage ?? null) ? $errorMessage : null;
 $openCreateModal = $errors !== [];
+$page = max(1, (int) ($pagination['page'] ?? 1));
+$totalPages = max(1, (int) ($pagination['totalPages'] ?? 1));
 ?>
 
 <div class="glass header">
@@ -78,6 +82,32 @@ $openCreateModal = $errors !== [];
         <?php endif; ?>
     </div>
 </section>
+
+<?php if ($totalPages > 1): ?>
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin: 6px 0 12px;">
+        <a
+            class="btn btn-secondary"
+            href="<?= $page > 1 ? '/clients?page=' . ($page - 1) : '#' ?>"
+            <?= $page <= 1 ? 'style="pointer-events:none; opacity:0.45;"' : '' ?>
+        >
+            Previous
+        </a>
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                <a class="btn <?= $i === $page ? 'btn-primary' : 'btn-secondary' ?>" href="/clients?page=<?= $i ?>">
+                    <?= $i ?>
+                </a>
+            <?php endfor; ?>
+        </div>
+        <a
+            class="btn btn-secondary"
+            href="<?= $page < $totalPages ? '/clients?page=' . ($page + 1) : '#' ?>"
+            <?= $page >= $totalPages ? 'style="pointer-events:none; opacity:0.45;"' : '' ?>
+        >
+            Next
+        </a>
+    </div>
+<?php endif; ?>
 
 <div id="create-client-modal" class="modal-overlay<?= $openCreateModal ? ' open' : '' ?>" data-modal-overlay>
     <div class="glass modal">
