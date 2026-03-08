@@ -1,4 +1,4 @@
-# ClientConnect App (Plain PHP)
+# ClientConnect App 
 
 ClientConnect is a framework-free PHP + MySQL application for managing clients, contacts, and the links between them.
 
@@ -9,6 +9,8 @@ The app includes:
 - Validation (including email format + uniqueness)
 - Pagination on list screens (5 per page, display-only)
 - Glassmorphism UI with favicon and responsive layouts
+
+![Clients Index](images/client_index.png)
 
 ---
 
@@ -119,10 +121,6 @@ Open in browser:
 ---
 
 ## UI Screenshots
-
-### Clients Index
-
-![Clients Index](images/client_index.png)
 
 ### Client Details
 
