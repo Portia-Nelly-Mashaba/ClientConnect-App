@@ -36,7 +36,7 @@ final class ClientController
         try {
             $connection->beginTransaction();
 
-            // Keep schema compatibility (NOT NULL + UNIQUE client_code) before final generated code.
+            // Insert with a temporary unique code, then replace it with the generated final code.
             $temporaryCode = $this->generateTemporaryClientCode($repository);
             $clientId = $repository->create($data['name'], $temporaryCode);
 

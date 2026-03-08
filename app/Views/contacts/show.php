@@ -10,85 +10,119 @@ $activeTab = $openClientsTab ? 'clients' : 'general';
 $contactId = (int) ($contact['id'] ?? 0);
 $statusMessage = is_string($statusMessage ?? null) ? $statusMessage : null;
 $errorMessage = is_string($errorMessage ?? null) ? $errorMessage : null;
+$selectedClientId = (int) ($_POST['client_id'] ?? 0);
 ?>
 
-<h2>Contact Details</h2>
-<p><a href="/contacts">Back to Contacts</a></p>
-
-<?php if ($statusMessage !== null): ?>
-    <p style="color:#166534; margin: 10px 0;"><?= htmlspecialchars($statusMessage, ENT_QUOTES, 'UTF-8') ?></p>
-<?php endif; ?>
-<?php if ($errorMessage !== null): ?>
-    <p style="color:#b91c1c; margin: 10px 0;"><?= htmlspecialchars($errorMessage, ENT_QUOTES, 'UTF-8') ?></p>
-<?php endif; ?>
-
-<div style="display:flex; gap:12px; margin-bottom: 14px;">
-    <a href="?tab=general" style="text-decoration:none; padding:6px 10px; border-radius:6px; border:1px solid #e5e7eb; <?= $activeTab === 'general' ? 'background:#111827;color:#fff;' : 'color:#111827;' ?>">General</a>
-    <a href="?tab=clients" style="text-decoration:none; padding:6px 10px; border-radius:6px; border:1px solid #e5e7eb; <?= $activeTab === 'clients' ? 'background:#111827;color:#fff;' : 'color:#111827;' ?>">Client(s)</a>
+<div class="glass header">
+    <div>
+        <h1 class="title">Contact Details</h1>
+        <p class="subtitle"><?= htmlspecialchars((string) (($contact['surname'] ?? '') . ' ' . ($contact['name'] ?? '')), ENT_QUOTES, 'UTF-8') ?></p>
+    </div>
+    <div style="display:flex; gap:10px;">
+        <a href="/contacts" class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Back to Contacts
+        </a>
+    </div>
 </div>
 
-<?php if ($activeTab === 'general'): ?>
-    <div style="display:grid; gap:12px; max-width:560px;">
-        <div>
-            <label for="contact-name" style="display:block; margin-bottom:4px;">Name</label>
-            <input id="contact-name" type="text" readonly value="<?= htmlspecialchars((string) ($contact['name'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px;">
+<?php if ($statusMessage !== null): ?>
+    <p class="status flash-message"><?= htmlspecialchars($statusMessage, ENT_QUOTES, 'UTF-8') ?></p>
+<?php endif; ?>
+<?php if ($errorMessage !== null): ?>
+    <p class="error flash-message"><?= htmlspecialchars($errorMessage, ENT_QUOTES, 'UTF-8') ?></p>
+<?php endif; ?>
+
+<div class="tabs-shell">
+    <div class="tabs">
+        <a
+            href="#"
+            class="tab-button <?= $activeTab === 'general' ? 'active' : '' ?>"
+            data-tab-button
+            data-tab-group="contact-show"
+            data-tab-target="#tab-general"
+        >
+            General
+        </a>
+        <a
+            href="#"
+            class="tab-button <?= $activeTab === 'clients' ? 'active' : '' ?>"
+            data-tab-button
+            data-tab-group="contact-show"
+            data-tab-target="#tab-clients"
+        >
+            Client(s)
+        </a>
+    </div>
+</div>
+
+<section id="tab-general" class="glass card tab-panel <?= $activeTab === 'general' ? 'active' : '' ?>" data-tab-panel data-tab-group="contact-show">
+    <div class="kv">
+        <div class="field">
+            <label for="contact-name">Name</label>
+            <input id="contact-name" type="text" readonly value="<?= htmlspecialchars((string) ($contact['name'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
         </div>
-        <div>
-            <label for="contact-surname" style="display:block; margin-bottom:4px;">Surname</label>
-            <input id="contact-surname" type="text" readonly value="<?= htmlspecialchars((string) ($contact['surname'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px;">
+        <div class="field">
+            <label for="contact-surname">Surname</label>
+            <input id="contact-surname" type="text" readonly value="<?= htmlspecialchars((string) ($contact['surname'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
         </div>
-        <div>
-            <label for="contact-email" style="display:block; margin-bottom:4px;">Email</label>
-            <input id="contact-email" type="text" readonly value="<?= htmlspecialchars((string) ($contact['email'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px;">
+        <div class="field">
+            <label for="contact-email">Email</label>
+            <input id="contact-email" type="text" readonly value="<?= htmlspecialchars((string) ($contact['email'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
         </div>
     </div>
-<?php else: ?>
+ </section>
+
+<section id="tab-clients" class="glass card tab-panel <?= $activeTab === 'clients' ? 'active' : '' ?>" data-tab-panel data-tab-group="contact-show">
     <?php if ($availableClients !== []): ?>
-        <form action="/contacts/<?= htmlspecialchars((string) $contactId, ENT_QUOTES, 'UTF-8') ?>/clients" method="post" style="margin: 8px 0 14px 0; display:grid; gap:10px; max-width:560px;">
-            <div>
-                <label for="client_id" style="display:block; margin-bottom:4px;">Link client</label>
-                <select id="client_id" name="client_id" style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px;">
+        <form action="/contacts/<?= htmlspecialchars((string) $contactId, ENT_QUOTES, 'UTF-8') ?>/clients" method="post" class="link-row">
+            <div class="field">
+                <label for="client_id">Link client</label>
+                <select id="client_id" name="client_id" required>
                     <?php foreach ($availableClients as $client): ?>
-                        <option value="<?= htmlspecialchars((string) ($client['id'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+                        <?php $isSelected = $selectedClientId > 0 && $selectedClientId === (int) ($client['id'] ?? 0); ?>
+                        <option value="<?= htmlspecialchars((string) ($client['id'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"<?= $isSelected ? ' selected' : '' ?>>
                             <?= htmlspecialchars((string) (($client['name'] ?? '') . ' - ' . ($client['client_code'] ?? '')), ENT_QUOTES, 'UTF-8') ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div>
-                <button type="submit" style="padding:8px 12px; border:1px solid #111827; background:#111827; color:#fff; border-radius:6px; cursor:pointer;">Link</button>
-            </div>
+            <button type="submit" class="btn btn-secondary btn-link-action">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10.5 13.5l3-3M8.2 15.8l-1.5 1.5a3 3 0 1 1-4.2-4.2L4 11.6a3 3 0 0 1 4.2 0M15.8 8.2l1.5-1.5a3 3 0 1 1 4.2 4.2L20 12.4a3 3 0 0 1-4.2 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Link
+            </button>
         </form>
     <?php endif; ?>
 
-    <?php if ($linkedClients === []): ?>
-        <p>No contact(s) found.</p>
-    <?php else: ?>
-        <table style="width:100%; border-collapse: collapse;">
-            <thead>
-            <tr>
-                <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px 6px;">Client name</th>
-                <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px 6px;">Client code</th>
-                <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px 6px;"></th>
-            </tr>
-            </thead>
-            <tbody>
-            <?php foreach ($linkedClients as $client): ?>
+    <div class="table-wrap">
+        <?php if ($linkedClients === []): ?>
+            <p class="muted">No contact(s) found.</p>
+        <?php else: ?>
+            <table>
+                <thead>
                 <tr>
-                    <td style="padding:8px 6px; border-bottom:1px solid #f3f4f6;">
-                        <?= htmlspecialchars((string) ($client['name'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
-                    </td>
-                    <td style="padding:8px 6px; border-bottom:1px solid #f3f4f6;">
-                        <?= htmlspecialchars((string) ($client['client_code'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
-                    </td>
-                    <td style="padding:8px 6px; border-bottom:1px solid #f3f4f6;">
-                        <form action="/contacts/<?= htmlspecialchars((string) $contactId, ENT_QUOTES, 'UTF-8') ?>/clients/<?= htmlspecialchars((string) ($client['id'] ?? ''), ENT_QUOTES, 'UTF-8') ?>/unlink" method="post">
-                            <button type="submit" style="padding:6px 10px; border:1px solid #dc2626; background:#fff; color:#dc2626; border-radius:6px; cursor:pointer;">Unlink</button>
-                        </form>
-                    </td>
+                    <th>Client name</th>
+                    <th>Client code</th>
+                    <th></th>
                 </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
-    <?php endif; ?>
-<?php endif; ?>
+                </thead>
+                <tbody>
+                <?php foreach ($linkedClients as $client): ?>
+                    <tr>
+                        <td><?= htmlspecialchars((string) ($client['name'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
+                        <td><?= htmlspecialchars((string) ($client['client_code'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
+                        <td>
+                            <form action="/contacts/<?= htmlspecialchars((string) $contactId, ENT_QUOTES, 'UTF-8') ?>/clients/<?= htmlspecialchars((string) ($client['id'] ?? ''), ENT_QUOTES, 'UTF-8') ?>/unlink" method="post" class="inline-form">
+                                <button type="submit" class="btn btn-danger btn-xs">
+                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                                    Unlink
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+    </div>
+</section>
